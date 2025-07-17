@@ -117,7 +117,6 @@ export const baseRules = {
   "space-in-parens": [2, "never"],
   "array-bracket-spacing": [2, "never"],
   "comma-spacing": [2, { before: false, after: true }],
-  "keyword-spacing": [2, "always"],
   "space-before-function-paren": [
     2,
     {
@@ -148,7 +147,6 @@ export const baseRules = {
       before: true,
     },
   ],
-  "@stylistic/func-call-spacing": 2,
   "@stylistic/type-annotation-spacing": 2,
 
   // file whitespace

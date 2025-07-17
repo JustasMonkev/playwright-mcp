@@ -25,6 +25,11 @@ import debug from 'debug';
 const fulfillSymbol = Symbol('fulfil callback');
 const rejectSymbol = Symbol('reject callback');
 
+type SubscriberPromise = Promise<any> & {
+  [fulfillSymbol]: (value: any) => void;
+  [rejectSymbol]: (reason: any) => void;
+};
+
 // NOTE: Can be removed when we drop Node.js 18 support and changed to import.meta.filename.
 const __filename = url.fileURLToPath(import.meta.url);
 
@@ -34,7 +39,7 @@ export class TestServer {
   private _routes = new Map<string, (request: http.IncomingMessage, response: http.ServerResponse) => any>();
   private _csp = new Map<string, string>();
   private _extraHeaders = new Map<string, object>();
-  private _requestSubscribers = new Map<string, Promise<any>>();
+  private _requestSubscribers = new Map<string, SubscriberPromise>();
   readonly PORT: number;
   readonly PREFIX: string;
   readonly CROSS_PROCESS_PREFIX: string;
@@ -127,7 +132,7 @@ export class TestServer {
     this._server.closeAllConnections();
     const error = new Error('Static Server has been reset');
     for (const subscriber of this._requestSubscribers.values())
-      subscriber[rejectSymbol].call(null, error);
+      (subscriber as any)[rejectSymbol].call(null, error);
     this._requestSubscribers.clear();
 
     this.setContent('/favicon.ico', '', 'image/x-icon');
@@ -158,7 +163,7 @@ export class TestServer {
     this.debugServer(`request ${request.method} ${path}`);
     // Notify request subscriber.
     if (this._requestSubscribers.has(path)) {
-      this._requestSubscribers.get(path)![fulfillSymbol].call(null, request);
+      (this._requestSubscribers.get(path)! as any)[fulfillSymbol].call(null, request);
       this._requestSubscribers.delete(path);
     }
     const handler = this._routes.get(path);

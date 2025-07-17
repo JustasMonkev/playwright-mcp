@@ -22,36 +22,38 @@ import { chromium } from 'playwright';
 import { test as baseTest, expect as baseExpect } from '@playwright/test';
 import { StdioClientTransport } from '@modelcontextprotocol/sdk/client/stdio.js';
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
-import { TestServer } from './testserver/index.ts';
+import { TestServer } from './testserver/index.js';
 
-import type { Config } from '../config';
+import type { Config } from '../config.js';
 import type { BrowserContext } from 'playwright';
 import type { Transport } from '@modelcontextprotocol/sdk/shared/transport.js';
 import type { Stream } from 'stream';
 
 export type TestOptions = {
-  mcpBrowser: string | undefined;
-  mcpMode: 'docker' | undefined;
+    mcpBrowser: string | undefined;
+    mcpMode: 'docker' | undefined;
 };
 
 type CDPServer = {
-  endpoint: string;
-  start: () => Promise<BrowserContext>;
+    endpoint: string;
+    start: () => Promise<BrowserContext>;
 };
 
 type TestFixtures = {
-  client: Client;
-  visionClient: Client;
-  startClient: (options?: { clientName?: string, args?: string[], config?: Config }) => Promise<{ client: Client, stderr: () => string }>;
-  wsEndpoint: string;
-  cdpServer: CDPServer;
-  server: TestServer;
-  httpsServer: TestServer;
-  mcpHeadless: boolean;
+    client: Client;
+    visionClient: Client;
+    startClient: (options?: { clientName?: string, args?: string[], config?: Config }) => Promise<{
+        client: Client,
+        stderr: () => string
+    }>;
+    wsEndpoint: string;
+    cdpServer: CDPServer;
+    server: TestServer;
+    httpsServer: TestServer;
 };
 
 type WorkerFixtures = {
-  _workerServers: { server: TestServer, httpsServer: TestServer };
+    _workerServers: { server: TestServer, httpsServer: TestServer };
 };
 
 export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>({
@@ -66,7 +68,7 @@ export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>(
     await use(client);
   },
 
-  startClient: async ({ mcpHeadless, mcpBrowser, mcpMode }, use, testInfo) => {
+  startClient: async ({ mcpBrowser, mcpMode }, use, testInfo) => {
     const userDataDir = mcpMode !== 'docker' ? testInfo.outputPath('user-data-dir') : undefined;
     const configDir = path.dirname(test.info().config.configFile!);
     let client: Client | undefined;
@@ -77,8 +79,6 @@ export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>(
         args.push('--user-data-dir', userDataDir);
       if (process.env.CI && process.platform === 'linux')
         args.push('--no-sandbox');
-      if (mcpHeadless)
-        args.push('--headless');
       if (mcpBrowser)
         args.push(`--browser=${mcpBrowser}`);
       if (options?.args)
@@ -105,7 +105,7 @@ export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>(
     await client?.close();
   },
 
-  wsEndpoint: async ({ }, use) => {
+  wsEndpoint: async ({}, use) => {
     const browserServer = await chromium.launchServer();
     await use(browserServer.wsEndpoint());
     await browserServer.close();
@@ -132,15 +132,11 @@ export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>(
     await browserContext?.close();
   },
 
-  mcpHeadless: async ({ headless }, use) => {
-    await use(headless);
-  },
-
   mcpBrowser: ['chrome', { option: true }],
 
   mcpMode: [undefined, { option: true }],
 
-  _workerServers: [async ({ }, use, workerInfo) => {
+  _workerServers: [async ({}, use, workerInfo) => {
     const port = 8907 + workerInfo.workerIndex * 4;
     const server = await TestServer.create(port);
 
@@ -167,8 +163,8 @@ export const test = baseTest.extend<TestFixtures & TestOptions, WorkerFixtures>(
 });
 
 async function createTransport(args: string[], mcpMode: TestOptions['mcpMode']): Promise<{
-  transport: Transport,
-  stderr: Stream | null,
+    transport: Transport,
+    stderr: Stream | null,
 }> {
   // NOTE: Can be removed when we drop Node.js 18 support and changed to import.meta.filename.
   const __filename = url.fileURLToPath(import.meta.url);
@@ -223,7 +219,7 @@ export const expect = baseExpect.extend({
     } catch (e) {
       return {
         pass: isNot,
-        message: () => e.message,
+        message: () => (e as Error).message,
       };
     }
     return {
@@ -236,7 +232,7 @@ export const expect = baseExpect.extend({
     const isNot = this.isNot;
     try {
       content = Array.isArray(content) ? content : [content];
-      const texts = (response.content as any).map(c => c.text);
+      const texts = (response.content as any).map((c: { text: any; }) => c.text);
       for (let i = 0; i < texts.length; i++) {
         if (isNot)
           expect(texts[i]).not.toContain(content[i]);
@@ -246,7 +242,7 @@ export const expect = baseExpect.extend({
     } catch (e) {
       return {
         pass: isNot,
-        message: () => e.message,
+        message: () => (e as Error).message,
       };
     }
     return {

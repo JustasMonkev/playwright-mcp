@@ -23,6 +23,8 @@ import type { Config, ToolCapability } from '../config.js';
 import type { BrowserContextOptions, LaunchOptions } from 'playwright';
 import { sanitizeForFilePath } from './tools/utils.js';
 
+const headlessMode = true;
+
 export type CLIOptions = {
   allowedOrigins?: string[];
   blockedOrigins?: string[];
@@ -57,7 +59,7 @@ const defaultConfig: FullConfig = {
     browserName: 'chromium',
     launchOptions: {
       channel: 'chrome',
-      headless: os.platform() === 'linux' && !process.env.DISPLAY,
+      headless: headlessMode,
       chromiumSandbox: true,
     },
     contextOptions: {
@@ -127,7 +129,7 @@ export async function configFromCLIOptions(cliOptions: CLIOptions): Promise<Conf
   const launchOptions: LaunchOptions = {
     channel,
     executablePath: cliOptions.executablePath,
-    headless: cliOptions.headless,
+    headless: headlessMode
   };
 
   // --no-sandbox was passed, disable the sandbox

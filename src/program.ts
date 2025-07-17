@@ -36,7 +36,6 @@ program
     .option('--config <path>', 'path to the configuration file.')
     .option('--device <device>', 'device to emulate, for example: "iPhone 15"')
     .option('--executable-path <path>', 'path to the browser executable.')
-    .option('--headless', 'run browser in headless mode, headed by default')
     .option('--host <host>', 'host to bind server to. Default is localhost. Use 0.0.0.0 to bind to all interfaces.')
     .option('--ignore-https-errors', 'ignore https errors')
     .option('--isolated', 'keep the browser profile in memory, do not save it to disk.')

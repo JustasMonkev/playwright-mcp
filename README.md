@@ -200,7 +200,6 @@ Playwright MCP server supports following arguments. They can be provided in the 
   --config <path>              path to the configuration file.
   --device <device>            device to emulate, for example: "iPhone 15"
   --executable-path <path>     path to the browser executable.
-  --headless                   run browser in headless mode, headed by default
   --host <host>                host to bind server to. Default is localhost. Use
                                0.0.0.0 to bind to all interfaces.
   --ignore-https-errors        ignore https errors
@@ -479,6 +478,15 @@ X Y coordinate space, based on the provided screenshot.
     - `element` (string): Human-readable element description used to obtain permission to interact with the element
     - `ref` (string): Exact target element reference from the page snapshot
     - `doubleClick` (boolean, optional): Whether to perform a double click instead of a single click
+  - Read-only: **false**
+
+<!-- NOTE: This has been generated via update-readme.js -->
+
+- **scan page for accessibility violations**
+  - Title: Scan page for accessibility violations
+  - Description: Scan the current page for accessibility violations using Axe
+  - Parameters:
+    - `violationsTag` (array): Array of tags to filter violations by. If not specified, all violations are returned.
   - Read-only: **false**
 
 <!-- NOTE: This has been generated via update-readme.js -->

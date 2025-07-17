@@ -19,6 +19,7 @@ import { z } from 'zod';
 import { defineTool } from './tool.js';
 import * as javascript from '../javascript.js';
 import { generateLocator } from './utils.js';
+import AxeBuilder from '@axe-core/playwright';
 
 const snapshot = defineTool({
   capability: 'core',
@@ -44,6 +45,21 @@ const snapshot = defineTool({
 const elementSchema = z.object({
   element: z.string().describe('Human-readable element description used to obtain permission to interact with the element'),
   ref: z.string().describe('Exact target element reference from the page snapshot'),
+});
+
+const tagValues = [
+  'wcag2a', 'wcag2aa', 'wcag2aaa', 'wcag21a', 'wcag21aa', 'wcag21aaa',
+  'wcag22a', 'wcag22aa', 'wcag22aaa', 'section508', 'cat.aria', 'cat.color',
+  'cat.forms', 'cat.keyboard', 'cat.language', 'cat.name-role-value',
+  'cat.parsing', 'cat.semantics', 'cat.sensory-and-visual-cues',
+  'cat.structure', 'cat.tables', 'cat.text-alternatives', 'cat.time-and-media',
+] as const;
+
+
+const scanPageSchema = z.object({
+  violationsTag: z
+      .array(z.enum(tagValues))
+      .min(1).describe('Array of tags to filter violations by. If not specified, all violations are returned.'),
 });
 
 const clickSchema = elementSchema.extend({
@@ -217,7 +233,36 @@ const selectOption = defineTool({
 
     return {
       code,
-      action: () => locator.selectOption(params.values).then(() => {}),
+      action: () => locator.selectOption(params.values).then(() => {
+      }),
+      captureSnapshot: true,
+      waitForNetwork: true,
+    };
+  },
+});
+
+const scanPage = defineTool({
+  capability: 'core',
+  schema: {
+    name: 'scan_page',
+    title: 'Scan page for accessibility violations',
+    description: 'Scan the current page for accessibility violations using Axe',
+    inputSchema: scanPageSchema,
+    type: 'destructive',
+  },
+
+  handle: async (context, params) => {
+    const tab = context.currentTabOrDie();
+    const axe = new AxeBuilder({ page: tab.page }).withTags(params.violationsTag);
+
+    return {
+      code: [`// Scan page for accessibility violations with tags: ${params.violationsTag.join(', ')}`],
+      action: async () => {
+        const results = await axe.analyze();
+        return {
+          content: [{ type: 'text', text: JSON.stringify(results, null, 2) }],
+        };
+      },
       captureSnapshot: true,
       waitForNetwork: true,
     };
@@ -227,6 +272,7 @@ const selectOption = defineTool({
 export default [
   snapshot,
   click,
+  scanPage,
   drag,
   hover,
   type,
